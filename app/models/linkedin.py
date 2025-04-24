@@ -1,68 +1,30 @@
-from sqlalchemy import Column, String, DateTime, Text, ForeignKey, JSON, Enum
+from sqlalchemy import Column, String, DateTime, Text, ForeignKey, Integer, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-import enum
 
 from app.database import Base
+from app.models.job_application import JobApplication  # Import instead of redefining
 
-class ApplicationStatus(str, enum.Enum):
-    PLANNING = "planning"
-    APPLIED = "applied"
-    IN_REVIEW = "in_review"
-    INTERVIEW_SCHEDULED = "interview_scheduled"
-    REJECTED = "rejected"
-    OFFER_RECEIVED = "offer_received"
-    ACCEPTED = "accepted"
-    DECLINED = "declined"
-
-class JobApplication(Base):
-    __tablename__ = "job_applications"
+class LinkedInMessage(Base):
+    __tablename__ = "linkedin_messages"
 
     id = Column(String, primary_key=True, index=True)
-    user_id = Column(String, ForeignKey("users.id"))
+    job_application_id = Column(String, ForeignKey("job_applications.id"))
     
-    # Job details
-    job_title = Column(String)
-    company_name = Column(String)
-    job_description = Column(Text)
-    job_url = Column(String, nullable=True)
-    job_location = Column(String, nullable=True)
-    salary_range = Column(String, nullable=True)
+    # Target person details
+    target_name = Column(String)
+    target_title = Column(String, nullable=True)
+    target_company = Column(String, nullable=True)
+    about_section = Column(Text, nullable=True)
     
-    # Application details
-    status = Column(Enum(ApplicationStatus), default=ApplicationStatus.PLANNING)
-    applied_date = Column(DateTime(timezone=True), nullable=True)
-    notes = Column(Text, nullable=True)
-    
-    # Parsed job details (extracted from job description)
-    parsed_job_details = Column(JSON, nullable=True)
+    # Message details
+    message_type = Column(String)  # connection_request, job_inquiry
+    generated_message = Column(Text)
+    character_count = Column(Integer)
+    is_sent = Column(Boolean, default=False)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships
-    user = relationship("User", back_populates="job_applications")
-    linkedin_messages = relationship("LinkedInMessage", back_populates="job_application", cascade="all, delete-orphan")
-    cover_letters = relationship("CoverLetter", back_populates="job_application", cascade="all, delete-orphan")
-    resume_optimizations = relationship("ResumeOptimization", back_populates="job_application", cascade="all, delete-orphan")
-
-class JobRequirement(Base):
-    __tablename__ = "job_requirements"
-    
-    id = Column(String, primary_key=True, index=True)
-    job_application_id = Column(String, ForeignKey("job_applications.id"))
-    requirement = Column(Text)
-    type = Column(String, nullable=True)  # required, preferred, etc.
-    
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-class JobResponsibility(Base):
-    __tablename__ = "job_responsibilities"
-    
-    id = Column(String, primary_key=True, index=True)
-    job_application_id = Column(String, ForeignKey("job_applications.id"))
-    responsibility = Column(Text)
-    
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    job_application = relationship("JobApplication", back_populates="linkedin_messages")

@@ -3,7 +3,7 @@ import shutil
 from typing import Optional
 from fastapi import UploadFile, HTTPException
 import uuid
-import magic
+import mimetypes
 
 from app.config import settings
 
@@ -27,13 +27,11 @@ def save_upload_file(upload_file: UploadFile, directory: Optional[str] = None) -
     Returns:
         Tuple of (file_path, file_type)
     """
-    # Check if the file type is allowed
-    content_type = magic.from_buffer(upload_file.file.read(2048), mime=True)
-    upload_file.file.seek(0)  # Reset file position after reading
-    
+    # Get file extension
     file_extension = os.path.splitext(upload_file.filename)[1].lower().lstrip('.')
     
-    if file_extension not in ALLOWED_EXTENSIONS or content_type not in ALLOWED_EXTENSIONS.values():
+    # Check if the file type is allowed
+    if file_extension not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=400,
             detail=f"File type not allowed. Allowed types: {', '.join(ALLOWED_EXTENSIONS.keys())}"

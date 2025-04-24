@@ -5,7 +5,7 @@ import json
 from app.config import settings
 
 # Initialize OpenAI client
-client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+openai.api_key = settings.OPENAI_API_KEY
 
 class OpenAIService:
     @staticmethod
@@ -22,16 +22,13 @@ class OpenAIService:
             Generated text
         """
         try:
-            response = await client.chat.completions.create(
+            response = await openai.Completion.acreate(
                 model=settings.OPENAI_MODEL,
-                messages=[
-                    {"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": prompt}
-                ],
+                prompt=prompt,
                 max_tokens=max_tokens,
                 temperature=temperature
             )
-            return response.choices[0].message.content.strip()
+            return response.choices[0].text.strip()
         except Exception as e:
             raise Exception(f"Error generating text: {str(e)}")
     
@@ -57,22 +54,22 @@ class OpenAIService:
             Your response should be ONLY valid JSON that follows this schema with no additional text.
             """
             
-            response = await client.chat.completions.create(
+            full_prompt = system_prompt + "\n\n" + prompt
+            
+            response = await openai.Completion.acreate(
                 model=settings.OPENAI_MODEL,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=temperature
+                prompt=full_prompt,
+                temperature=temperature,
+                max_tokens=2000
             )
             
             # Parse the response as JSON
             try:
-                result = json.loads(response.choices[0].message.content.strip())
+                result = json.loads(response.choices[0].text.strip())
                 return result
             except json.JSONDecodeError:
                 # If JSON parsing fails, try to extract JSON from the response
-                content = response.choices[0].message.content.strip()
+                content = response.choices[0].text.strip()
                 json_start = content.find('{')
                 json_end = content.rfind('}') + 1
                 if json_start >= 0 and json_end > json_start:

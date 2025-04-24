@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     
     # OpenAI settings
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
     
     # File upload settings
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "uploads")
